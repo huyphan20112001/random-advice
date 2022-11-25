@@ -1,10 +1,14 @@
 import "./App.scss";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import debounce from "lodash.debounce";
 
 function App() {
   const [advice, setAdvice] = useState("");
   const [id, setId] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const fetchAdvice = async (id) => {
     const data = await axios
@@ -14,9 +18,13 @@ function App() {
         console.log(error);
       });
     setAdvice(data);
-    console.log("data", data);
+    setLoading(false);
   };
   // console.log(fetchAdvice(129));
+  const debounced = useCallback(
+    debounce((nextValue) => fetchAdvice(nextValue), 500),
+    []
+  );
 
   const handleClick = () => {
     const min = 1;
@@ -33,18 +41,22 @@ function App() {
   // console.log(fetchAdvice);
 
   useEffect(() => {
-    id && fetchAdvice(id);
+    if (id) {
+      debounced(id);
+      setLoading(true);
+    }
   }, [id]);
 
-  useEffect(() => {
-    fetchAdvice(id);
-  }, []);
+  // useEffect(() => {
+  //   fetchAdvice(id);
+  // }, []);
 
   return (
     <div className="wrapper">
       <div className="random">
         <div className="advice">
-          <span>{advice}</span>
+          {!loading && <span>{advice}</span>}
+          {loading && <FontAwesomeIcon className="loading" icon={faSpinner} />}
         </div>
         <div className="button">
           <button onClick={() => handleClick()}>RANDOM</button>
